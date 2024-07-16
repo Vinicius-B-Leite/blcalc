@@ -8,6 +8,7 @@ export const estilos = StyleSheet.create({
 		margin: "1%",
 		paddingVertical: "6%",
 		borderRadius: 10,
+		backgroundColor: "#000",
 	},
 	digito: {
 		fontSize: 23,

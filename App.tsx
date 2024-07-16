@@ -9,6 +9,7 @@ import {
 	View,
 } from "react-native"
 import Tecla from "./src/components/Tecla"
+import { useState } from "react"
 
 const teclas = [
 	"C",
@@ -27,29 +28,107 @@ const teclas = [
 	2,
 	1,
 	"+",
-	"",
+	"<=",
 	"0",
 	",",
-	"",
+	"=",
 ]
+
+/**
+ * 0. Deve remover o ultimo digito OK
+ * 1. Dps de um operador não pode ter outro operador tipo 2++1 OK
+ * 2. Dps de abrir parentese não pode ter operador e nem ponto 1+(.2) OK
+ * 3. O primeiro digito não pode ser um operador
+ * 4. O ultimo digito não pode ser um operador ao calcular
+ * 5. Não pode ter dois pontos seguidos 2..1
+ * 6. Não pode ter dois parenteses seguidos 2+()
+ * 7. Não pode ter um ponto dps de um operador 2+.
+ * 8. Não pode ter um ponto dps de um parentese 2+(.
+ * 9. Não pode ter um operador dps de um ponto 2+.
+ */
+
 export default function App() {
+	const [equacao, setEquacao] = useState("")
+	const [resultado, setResultado] = useState("")
+
+	const calcular = (e: string) => {
+		try {
+			const result = eval(e)
+			setResultado(result)
+		} catch (error) {
+			console.log("erro")
+		}
+	}
+
+	const adicionaDigito = (digito: string) => {
+		if (equacao == "") {
+			const proximoDigitoEhOperador = ["+", "-", "/", "x"].includes(digito)
+			if (proximoDigitoEhOperador) {
+				return
+			}
+		}
+
+		const ultimoDigito = equacao[equacao.length - 1]
+
+		const ultimoDigitoEhOperador = ["+", "-", "/", "x"].includes(ultimoDigito)
+		if (ultimoDigitoEhOperador) {
+			const proxDigitoEhOperador = ["+", "-", "/", "x"].includes(digito)
+			if (proxDigitoEhOperador) {
+				return
+			}
+		}
+
+		const ultimoDigitoEhParentese = ["(", ")"].includes(ultimoDigito)
+		if (ultimoDigitoEhParentese) {
+			const proxDigitoEhOperador = ["+", "-", "/", "x"].includes(digito)
+			if (proxDigitoEhOperador || digito === ",") {
+				return
+			}
+		}
+
+		if (digito === "C") {
+			setEquacao("")
+			setResultado("")
+			return
+		}
+
+		if (digito === "<=") {
+			setEquacao((equacaoAnterior) =>
+				equacaoAnterior.substring(0, equacaoAnterior.length - 1)
+			)
+			return
+		}
+
+		if (digito === "=") {
+			calcular(equacao)
+			return
+		}
+
+		setEquacao((equacaoAnterior) => equacaoAnterior + digito)
+	}
+
 	return (
 		<SafeAreaView style={styles.container}>
 			<StatusBar backgroundColor={"#000"} barStyle={"light-content"} />
 
 			<TouchableOpacity style={styles.icon}>
-				<FontAwesome name="history" size={20} color={"#ff"} />
+				<FontAwesome name="history" size={20} color={"#fff"} />
 			</TouchableOpacity>
 
 			<View style={styles.visor}>
-				<Text style={styles.equacao}>21+20</Text>
-				<Text style={styles.resultado}>21+20</Text>
+				<Text style={styles.equacao}>{equacao}</Text>
+				<Text style={styles.resultado}>{resultado}</Text>
 			</View>
 
 			<FlatList
 				style={styles.teclado}
 				data={teclas}
-				renderItem={({ item }) => <Tecla item={String(item)} />}
+				renderItem={({ item }) => (
+					<Tecla
+						item={String(item)}
+						onPress={() => adicionaDigito(String(item))}
+					/>
+				)}
 				numColumns={4}
 			/>
 		</SafeAreaView>
@@ -63,8 +142,8 @@ const styles = StyleSheet.create({
 	},
 	icon: {
 		position: "absolute",
-		left: "47%",
-		top: "1%",
+		top: "9%",
+		alignSelf: "center",
 	},
 	visor: {
 		padding: "5%",
