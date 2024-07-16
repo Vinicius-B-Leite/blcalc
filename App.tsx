@@ -50,13 +50,14 @@ const teclas = [
 export default function App() {
 	const [equacao, setEquacao] = useState("")
 	const [resultado, setResultado] = useState("")
+	const [erro, setErro] = useState("")
 
 	const calcular = (e: string) => {
 		try {
 			const result = eval(e)
 			setResultado(result)
 		} catch (error) {
-			console.log("erro")
+			setErro("Equação inválida")
 		}
 	}
 
@@ -89,6 +90,7 @@ export default function App() {
 		if (digito === "C") {
 			setEquacao("")
 			setResultado("")
+			setErro("")
 			return
 		}
 
@@ -117,7 +119,9 @@ export default function App() {
 
 			<View style={styles.visor}>
 				<Text style={styles.equacao}>{equacao}</Text>
-				<Text style={styles.resultado}>{resultado}</Text>
+				<Text style={[styles.resultado, { color: erro ? "red" : "#fff" }]}>
+					{erro || resultado}
+				</Text>
 			</View>
 
 			<FlatList
@@ -159,7 +163,7 @@ const styles = StyleSheet.create({
 	},
 	resultado: {
 		textAlign: "right",
-		color: "#fff",
+
 		fontSize: 35,
 	},
 	teclado: {
