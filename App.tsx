@@ -10,29 +10,8 @@ import {
 } from "react-native"
 import Tecla from "./src/components/Tecla"
 import { useState } from "react"
-
-const teclas = [
-	"C",
-	"(",
-	")",
-	"/",
-	9,
-	8,
-	7,
-	"x",
-	6,
-	5,
-	4,
-	"-",
-	3,
-	2,
-	1,
-	"+",
-	"<=",
-	"0",
-	",",
-	"=",
-]
+import { useCalc } from "./useCalc"
+import { operadores, teclas } from "./src/constants/teclas"
 
 /**
  * 0. Deve remover o ultimo digito OK
@@ -48,67 +27,7 @@ const teclas = [
  */
 
 export default function App() {
-	const [equacao, setEquacao] = useState("")
-	const [resultado, setResultado] = useState("")
-	const [erro, setErro] = useState("")
-
-	const calcular = (e: string) => {
-		try {
-			const result = eval(e)
-			setResultado(result)
-		} catch (error) {
-			setErro("Equação inválida")
-		}
-	}
-
-	const adicionaDigito = (digito: string) => {
-		if (equacao == "") {
-			const proximoDigitoEhOperador = ["+", "-", "/", "x"].includes(digito)
-			if (proximoDigitoEhOperador) {
-				return
-			}
-		}
-
-		const ultimoDigito = equacao[equacao.length - 1]
-
-		const ultimoDigitoEhOperador = ["+", "-", "/", "x"].includes(ultimoDigito)
-		if (ultimoDigitoEhOperador) {
-			const proxDigitoEhOperador = ["+", "-", "/", "x"].includes(digito)
-			if (proxDigitoEhOperador) {
-				return
-			}
-		}
-
-		const ultimoDigitoEhParentese = ["(", ")"].includes(ultimoDigito)
-		if (ultimoDigitoEhParentese) {
-			const proxDigitoEhOperador = ["+", "-", "/", "x"].includes(digito)
-			if (proxDigitoEhOperador || digito === ",") {
-				return
-			}
-		}
-
-		if (digito === "C") {
-			setEquacao("")
-			setResultado("")
-			setErro("")
-			return
-		}
-
-		if (digito === "<=") {
-			setEquacao((equacaoAnterior) =>
-				equacaoAnterior.substring(0, equacaoAnterior.length - 1)
-			)
-			return
-		}
-
-		if (digito === "=") {
-			calcular(equacao)
-			return
-		}
-
-		setEquacao((equacaoAnterior) => equacaoAnterior + digito)
-	}
-
+	const { adicionaDigito, equacao, erro, resultado } = useCalc()
 	return (
 		<SafeAreaView style={styles.container}>
 			<StatusBar backgroundColor={"#000"} barStyle={"light-content"} />
