@@ -8,8 +8,10 @@ export function useCalc() {
 
 	const calcular = (e: string) => {
 		try {
-			const result = eval(e)
-			setResultado(result)
+			const equacaoFormatada = e.replace(/x/g, "*").replace(/,/g, ".")
+			const result = eval(equacaoFormatada)
+			const resultadoFormatado = result.toString().replace(".", ",")
+			setResultado(resultadoFormatado)
 		} catch (error) {
 			setErro("Equação inválida")
 		}

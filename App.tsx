@@ -7,6 +7,8 @@ import {
 	Text,
 	TouchableOpacity,
 	View,
+	Dimensions,
+	Platform,
 } from "react-native"
 import Tecla from "./src/components/Tecla"
 import { useState } from "react"
@@ -26,6 +28,12 @@ import { operadores, teclas } from "./src/constants/teclas"
  * 9. Não pode ter um operador dps de um ponto 2+.
  */
 
+const LARGURA = Dimensions.get("window").width
+const ALTURA = Dimensions.get("window").height
+const eIOS = Platform.OS == "ios"
+
+const TECLA_COLUNA_LINHA_MARGEM = LARGURA * 0.02
+
 export default function App() {
 	const { adicionaDigito, equacao, erro, resultado } = useCalc()
 	return (
@@ -43,17 +51,26 @@ export default function App() {
 				</Text>
 			</View>
 
-			<FlatList
-				style={styles.teclado}
-				data={teclas}
-				renderItem={({ item }) => (
-					<Tecla
-						item={String(item)}
-						onPress={() => adicionaDigito(String(item))}
-					/>
-				)}
-				numColumns={4}
-			/>
+			<View>
+				<FlatList
+					style={styles.teclado}
+					columnWrapperStyle={{
+						gap: TECLA_COLUNA_LINHA_MARGEM,
+						justifyContent: "space-between",
+					}}
+					contentContainerStyle={{
+						gap: TECLA_COLUNA_LINHA_MARGEM,
+					}}
+					data={teclas}
+					renderItem={({ item }) => (
+						<Tecla
+							item={String(item)}
+							onPress={() => adicionaDigito(String(item))}
+						/>
+					)}
+					numColumns={4}
+				/>
+			</View>
 		</SafeAreaView>
 	)
 }
@@ -65,7 +82,7 @@ const styles = StyleSheet.create({
 	},
 	icon: {
 		position: "absolute",
-		top: "9%",
+		top: ALTURA * 0.02 + (eIOS ? ALTURA * 0.04 : 0),
 		alignSelf: "center",
 	},
 	visor: {
@@ -90,6 +107,5 @@ const styles = StyleSheet.create({
 		borderTopRightRadius: 30,
 		backgroundColor: "#101010",
 		padding: "8%",
-		flex: 1,
 	},
 })
