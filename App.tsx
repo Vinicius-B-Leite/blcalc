@@ -7,32 +7,14 @@ import {
 	Text,
 	TouchableOpacity,
 	View,
+	Dimensions,
+	Platform,
 } from "react-native"
 import Tecla from "./src/components/Tecla"
 import { useState } from "react"
-
-const teclas = [
-	"C",
-	"(",
-	")",
-	"/",
-	9,
-	8,
-	7,
-	"x",
-	6,
-	5,
-	4,
-	"-",
-	3,
-	2,
-	1,
-	"+",
-	"<=",
-	"0",
-	",",
-	"=",
-]
+import { useCalc } from "./useCalc"
+import { operadores, teclas } from "./src/constants/teclas"
+import Historico from "./src/components/Historico"
 
 /**
  * 0. Deve remover o ultimo digito OK
@@ -47,89 +29,65 @@ const teclas = [
  * 9. Não pode ter um operador dps de um ponto 2+.
  */
 
+const LARGURA = Dimensions.get("window").width
+const ALTURA = Dimensions.get("window").height
+const eIOS = Platform.OS == "ios"
+
+const TECLA_COLUNA_LINHA_MARGEM = LARGURA * 0.02
+
 export default function App() {
-	const [equacao, setEquacao] = useState("")
-	const [resultado, setResultado] = useState("")
-
-	const calcular = (e: string) => {
-		try {
-			const result = eval(e)
-			setResultado(result)
-		} catch (error) {
-			console.log("erro")
-		}
-	}
-
-	const adicionaDigito = (digito: string) => {
-		if (equacao == "") {
-			const proximoDigitoEhOperador = ["+", "-", "/", "x"].includes(digito)
-			if (proximoDigitoEhOperador) {
-				return
-			}
-		}
-
-		const ultimoDigito = equacao[equacao.length - 1]
-
-		const ultimoDigitoEhOperador = ["+", "-", "/", "x"].includes(ultimoDigito)
-		if (ultimoDigitoEhOperador) {
-			const proxDigitoEhOperador = ["+", "-", "/", "x"].includes(digito)
-			if (proxDigitoEhOperador) {
-				return
-			}
-		}
-
-		const ultimoDigitoEhParentese = ["(", ")"].includes(ultimoDigito)
-		if (ultimoDigitoEhParentese) {
-			const proxDigitoEhOperador = ["+", "-", "/", "x"].includes(digito)
-			if (proxDigitoEhOperador || digito === ",") {
-				return
-			}
-		}
-
-		if (digito === "C") {
-			setEquacao("")
-			setResultado("")
-			return
-		}
-
-		if (digito === "<=") {
-			setEquacao((equacaoAnterior) =>
-				equacaoAnterior.substring(0, equacaoAnterior.length - 1)
-			)
-			return
-		}
-
-		if (digito === "=") {
-			calcular(equacao)
-			return
-		}
-
-		setEquacao((equacaoAnterior) => equacaoAnterior + digito)
-	}
+	const {
+		adicionaDigito,
+		equacao,
+		erro,
+		resultado,
+		modalVisivel,
+		fecharModal,
+		abrirModal,
+		historico,
+		removerHistorico,
+	} = useCalc()
 
 	return (
 		<SafeAreaView style={styles.container}>
 			<StatusBar backgroundColor={"#000"} barStyle={"light-content"} />
 
-			<TouchableOpacity style={styles.icon}>
+			<TouchableOpacity onPress={abrirModal} style={styles.icon}>
 				<FontAwesome name="history" size={20} color={"#fff"} />
 			</TouchableOpacity>
 
 			<View style={styles.visor}>
 				<Text style={styles.equacao}>{equacao}</Text>
-				<Text style={styles.resultado}>{resultado}</Text>
+				<Text style={[styles.resultado, { color: erro ? "red" : "#fff" }]}>
+					{erro || resultado}
+				</Text>
 			</View>
 
-			<FlatList
-				style={styles.teclado}
-				data={teclas}
-				renderItem={({ item }) => (
-					<Tecla
-						item={String(item)}
-						onPress={() => adicionaDigito(String(item))}
-					/>
-				)}
-				numColumns={4}
+			<View>
+				<FlatList
+					style={styles.teclado}
+					columnWrapperStyle={{
+						gap: TECLA_COLUNA_LINHA_MARGEM,
+						justifyContent: "space-between",
+					}}
+					contentContainerStyle={{
+						gap: TECLA_COLUNA_LINHA_MARGEM,
+					}}
+					data={teclas}
+					renderItem={({ item }) => (
+						<Tecla
+							item={String(item)}
+							onPress={() => adicionaDigito(String(item))}
+						/>
+					)}
+					numColumns={4}
+				/>
+			</View>
+			<Historico
+				historico={historico}
+				visible={modalVisivel}
+				fecharModal={fecharModal}
+				removerHistorico={removerHistorico}
 			/>
 		</SafeAreaView>
 	)
@@ -142,8 +100,9 @@ const styles = StyleSheet.create({
 	},
 	icon: {
 		position: "absolute",
-		top: "9%",
+		top: ALTURA * 0.02 + (eIOS ? ALTURA * 0.04 : 0),
 		alignSelf: "center",
+		zIndex: 1,
 	},
 	visor: {
 		padding: "5%",
@@ -159,7 +118,7 @@ const styles = StyleSheet.create({
 	},
 	resultado: {
 		textAlign: "right",
-		color: "#fff",
+
 		fontSize: 35,
 	},
 	teclado: {
@@ -167,6 +126,5 @@ const styles = StyleSheet.create({
 		borderTopRightRadius: 30,
 		backgroundColor: "#101010",
 		padding: "8%",
-		flex: 1,
 	},
 })
