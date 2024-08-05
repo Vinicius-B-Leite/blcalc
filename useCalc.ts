@@ -1,17 +1,57 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { operadores } from "./src/constants/teclas"
+import { HistoricoItem } from "./src/components/Historico/type"
+
+import { carregarDoStorage, salvarNoStorage } from "./src/storage"
 
 export function useCalc() {
 	const [equacao, setEquacao] = useState("")
 	const [resultado, setResultado] = useState("")
 	const [erro, setErro] = useState("")
+	const [modalVisivel, setModalVisivel] = useState(false)
+	const [historico, setHistorico] = useState<HistoricoItem[]>([])
 
-	const calcular = (e: string) => {
+	useEffect(() => {
+		carregarHistorico()
+	}, [])
+
+	useEffect(() => {
+		salvarNoCache()
+	}, [historico])
+
+	const carregarHistorico = async () => {
+		const historicoCache = await carregarDoStorage<HistoricoItem[]>("@historico")
+		if (!historicoCache) return
+
+		console.log({ historicoCache })
+
+		setHistorico(historicoCache)
+	}
+
+	const salvarNoCache = async () => {
+		await salvarNoStorage<HistoricoItem[]>({
+			chave: "@historico",
+			valor: historico,
+		})
+		// await AsyncStorage.setItem("@historico", JSON.stringify(historico))
+	}
+
+	const calcular = async (e: string) => {
 		try {
 			const equacaoFormatada = e.replace(/x/g, "*").replace(/,/g, ".")
 			const result = eval(equacaoFormatada)
 			const resultadoFormatado = result.toString().replace(".", ",")
 			setResultado(resultadoFormatado)
+
+			setHistorico((historicoAnterior) => {
+				const novoHistorico: HistoricoItem = {
+					equacao: e,
+					resultado: resultadoFormatado,
+					id: String(Date.now()),
+				}
+
+				return [...historicoAnterior, novoHistorico]
+			})
 		} catch (error) {
 			setErro("Equação inválida")
 		}
@@ -65,10 +105,39 @@ export function useCalc() {
 		setEquacao((equacaoAnterior) => equacaoAnterior + digito)
 	}
 
+	const fecharModal = () => {
+		setModalVisivel(false)
+	}
+
+	const abrirModal = () => {
+		setModalVisivel(true)
+	}
+
+	const removerHistorico = ({ id }: { id: string }) => {
+		// encontra o item no historico que tem o id
+		// const index = historico.findIndex((item) => item.id === id)
+		// const encontrouOItem = index > -1
+
+		// if (encontrouOItem) {
+		// 	const novoHistorico = [...historico]
+		// 	novoHistorico.splice(index, 1)
+
+		// 	setHistorico(novoHistorico)
+		// }
+
+		const novoHistorico = historico.filter((item) => item.id !== id)
+		setHistorico(novoHistorico)
+	}
+
 	return {
 		equacao: equacao,
 		erro: erro,
 		resultado: resultado,
 		adicionaDigito: adicionaDigito,
+		modalVisivel,
+		fecharModal,
+		abrirModal,
+		historico,
+		removerHistorico,
 	}
 }

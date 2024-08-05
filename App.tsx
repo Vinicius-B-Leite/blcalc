@@ -14,6 +14,7 @@ import Tecla from "./src/components/Tecla"
 import { useState } from "react"
 import { useCalc } from "./useCalc"
 import { operadores, teclas } from "./src/constants/teclas"
+import Historico from "./src/components/Historico"
 
 /**
  * 0. Deve remover o ultimo digito OK
@@ -35,12 +36,23 @@ const eIOS = Platform.OS == "ios"
 const TECLA_COLUNA_LINHA_MARGEM = LARGURA * 0.02
 
 export default function App() {
-	const { adicionaDigito, equacao, erro, resultado } = useCalc()
+	const {
+		adicionaDigito,
+		equacao,
+		erro,
+		resultado,
+		modalVisivel,
+		fecharModal,
+		abrirModal,
+		historico,
+		removerHistorico,
+	} = useCalc()
+
 	return (
 		<SafeAreaView style={styles.container}>
 			<StatusBar backgroundColor={"#000"} barStyle={"light-content"} />
 
-			<TouchableOpacity style={styles.icon}>
+			<TouchableOpacity onPress={abrirModal} style={styles.icon}>
 				<FontAwesome name="history" size={20} color={"#fff"} />
 			</TouchableOpacity>
 
@@ -71,6 +83,12 @@ export default function App() {
 					numColumns={4}
 				/>
 			</View>
+			<Historico
+				historico={historico}
+				visible={modalVisivel}
+				fecharModal={fecharModal}
+				removerHistorico={removerHistorico}
+			/>
 		</SafeAreaView>
 	)
 }
@@ -84,6 +102,7 @@ const styles = StyleSheet.create({
 		position: "absolute",
 		top: ALTURA * 0.02 + (eIOS ? ALTURA * 0.04 : 0),
 		alignSelf: "center",
+		zIndex: 1,
 	},
 	visor: {
 		padding: "5%",
